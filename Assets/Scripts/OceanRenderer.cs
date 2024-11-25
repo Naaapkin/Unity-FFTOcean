@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -26,8 +24,6 @@ public class OceanRenderer : MonoBehaviour
     [SerializeField] private int length;
     [SerializeField] private float lambda;
     [SerializeField] private WaveData waveData;
-    // [SerializeField] private DisplaySpectrumSettings spectrum1;
-    // [SerializeField] private DisplaySpectrumSettings spectrum2;
     
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
@@ -49,7 +45,6 @@ public class OceanRenderer : MonoBehaviour
 
     private RenderTexture reflection;
     
-    // private ComputeBuffer spectrumsBuffer; 
     private CommandBuffer cmd;
 
 #if UNITY_EDITOR
@@ -120,17 +115,11 @@ public class OceanRenderer : MonoBehaviour
         cmd.SetComputeTextureParam(waveShader, K_MERGE_TEXTURES, P_DERIVATIVES, derivatives);
         cmd.SetComputeTextureParam(waveShader, K_MERGE_TEXTURES, P_TURBULENCE, turbulence);
         
-        // spectrumsBuffer = new ComputeBuffer(2, 32);
-        // SpectrumData[] spectrumDatas = new SpectrumData[2];
-        // spectrumDatas[0] = FillSettingsStruct(spectrum1);
-        // spectrumDatas[1] = FillSettingsStruct(spectrum2);
-        // spectrumsBuffer.SetData(spectrumDatas);
-        
         GenerateNoise();
         GenerateStaticSpectrum();
         Graphics.ExecuteCommandBuffer(cmd);
         
-        fft = new FastFourierTransform(fftShader, size);
+        fft = new FastFourierTransform(fftShader, new Vector2Int(size, size));
         oceanMaterial_Ins = Material.Instantiate(oceanMaterial);
         meshFilter.mesh = Utility.CreatePlane(size, size, length, length);
         meshRenderer.material = oceanMaterial_Ins;
@@ -184,7 +173,6 @@ public class OceanRenderer : MonoBehaviour
         meshRenderer.material = null;
         cmd.Dispose();
         fft.Dispose();
-        // spectrumsBuffer.Dispose();
     }
 
     private void GenerateStaticSpectrum()
@@ -193,7 +181,6 @@ public class OceanRenderer : MonoBehaviour
         cmd.SetComputeTextureParam(spectrumShader, K_STATIC_SPECTRUM, P_GAUSS_NOISE, gaussNoise);
         cmd.SetComputeTextureParam(spectrumShader, K_STATIC_SPECTRUM, P_H0, h0);
         cmd.SetComputeTextureParam(spectrumShader, K_STATIC_SPECTRUM, P_FREQUENCY, frequency);
-        // cmd.SetComputeBufferParam(spectrumShader, K_STATIC_SPECTRUM, P_SPECTRUM_PARS, spectrumsBuffer);
         cmd.SetComputeFloatParams(spectrumShader, P_DIRECTION, waveData.windDirectionX, waveData.windDirectionY);
         cmd.SetComputeFloatParams(spectrumShader, P_LENGTH, length);
         cmd.SetComputeFloatParam(spectrumShader, P_WIND_SPEED, waveData.windSpeed);
@@ -211,31 +198,6 @@ public class OceanRenderer : MonoBehaviour
         spectrumShader.Dispatch(K_GAUSS_NOISE, size >> 3, size >> 3, 1);
     }
     
-    // SpectrumData FillSettingsStruct(DisplaySpectrumSettings display)
-    // {
-    //     return new SpectrumData
-    //     {
-    //         scale = display.scale,
-    //         angle = display.windDirection / 180 * Mathf.PI,
-    //         spreadBlend = display.spreadBlend,
-    //         swell = Mathf.Clamp(display.swell, 0.01f, 1),
-    //         alpha = JonswapAlpha(waveData.gravityAcceleration, display.fetch, display.windSpeed),
-    //         peakOmega = JonswapPeakFrequency(waveData.gravityAcceleration, display.fetch, display.windSpeed),
-    //         gamma = display.peakEnhancement,
-    //         shortWavesFade = display.shortWavesFade,
-    //     };
-    // }
-    //
-    // float JonswapAlpha(float g, float fetch, float windSpeed)
-    // {
-    //     return 0.076f * Mathf.Pow(g * fetch / windSpeed / windSpeed, -0.22f);
-    // }
-    //
-    // float JonswapPeakFrequency(float g, float fetch, float windSpeed)
-    // {
-    //     return 22 * Mathf.Pow(windSpeed * fetch / g / g, -0.33f);
-    // }
-
     private int K_STATIC_SPECTRUM;
     private int K_GAUSS_NOISE;
     private int K_GENERATE_WAVE;

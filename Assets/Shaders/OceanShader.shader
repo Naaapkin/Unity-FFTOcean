@@ -139,8 +139,8 @@ Shader "Unlit/NewUnlit"
                 float jacobian = saturate(-SAMPLE_TEXTURE2D(_Turbulence, sampler_Turbulence, i.uv) * _FoamScale);
                 // 次表面散射
                 float scattering = pow(saturate(dot(light.direction, -viewDir)), 5);
-                float3 waterColor = SampleSceneColor(i.screenUV + distortDist) * extinction
-                    + _SSSColor.rgb * lerp(_WaterColor.rgb, _SSSColor.rgb, scattering);;
+                float3 waterColor = lerp(lerp(_WaterColor.rgb, _SSSColor.rgb, scattering),
+                    SampleSceneColor(i.screenUV + distortDist), extinction);
                 //海洋颜色
                 float3 oceanDiffuse = lerp(waterColor.rgb, _FoamColor.rgb, jacobian) * light.color * saturate(LDOTN);
 

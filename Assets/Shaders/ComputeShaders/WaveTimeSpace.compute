@@ -27,7 +27,7 @@ void GenerateWave (uint3 id : SV_DispatchThreadID)
     float2 exponent = float2(cos(phase), sin(phase));
     
     float2 hHat = ComplexMul(exponent, H0[(Size - id.xy) % Size]);
-    hHat += ComplexMul(exponent, H0[id.xy]) + float2(hHat.x, -hHat.y);
+    hHat = ComplexMul(exponent, H0[id.xy]) + float2(hHat.x, -hHat.y);
     
     float2 ihHat = float2(-hHat.y, hHat.x);
     float2 idxz = freq.x * freq.y * ihHat * freq.z;         // dD(x, z)/dz = kx * kz * hHat / |k|
